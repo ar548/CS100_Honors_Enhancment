@@ -2,7 +2,25 @@ from tkinter import *
 import mysql.connector
 # import paramiko
 
+"""
+TODO add an add row functionality (button)
+TODO complete the update table button
+TODO (LATER) add functionality to narrow down the table before displaying it
+    this should prevent updating so that it is ensured that all fields are filled out
+
+"""
+
+
+tab = list()
+numRows = 0
+numCols = 0
+sv = list()
+
 def callRequest():
+    global tab
+    global numRows
+    global numCols
+    global sv
     print('requesting table')
 
     query = 'SHOW COLUMNS FROM ' + tableRequested.get() + ';'
@@ -49,15 +67,49 @@ def callRequest():
     for i in range(numRows):
         tab.append(c)
 
+    #sv = [[None]*numCols]*numRows
+    svr = list()
     for i in range(numRows):
         for j in range(numCols):
-            tab[i][j] = Entry(mainTableFrame)
-            tab[i][j].grid(row=i, column=j, padx=5, pady=5)
-            tab[i][j].insert(0, table[i][j])
+            svr.append(StringVar())
+        sv.append(svr)
+        svr = list()
+
+    for i in sv:
+        print(i)
+
+    for i in range(numRows):
+        for j in range(numCols):
+            # yes I know that doing it this way is bad practice but I just wanted to make
+            # it work.  ill make it better later
+            if i == 0:
+                tab[i][j] = Label(mainTableFrame, text = table[i][j])
+                tab[i][j].grid(row=i, column=j, padx=5, pady=5)
+            else:
+                sv[i][j].set(table[i][j])
+                tab[i][j] = Entry(mainTableFrame, textvariable = sv[i][j])
+                tab[i][j].grid(row=i, column=j, padx=5, pady=5)
 
 
 def callUpdate():
+    global tab
+    global numRows
+    global numCols
+    global sv
+    updatedTable = list()
+    updatedTableRow = list()
     print('update')
+    for i in range(numRows):
+        for j in range(numCols):
+            print(sv[i][j].get())
+            updatedTableRow.append(sv[i][j].get())
+        updatedTable.append(updatedTableRow)
+        updatedTableRow = list()
+
+    for i in updatedTable:
+        print(i)
+
+
 
 njit_SQLServerConnect = {
     'user': 'ar548',

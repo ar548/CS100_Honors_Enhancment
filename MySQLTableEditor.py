@@ -7,7 +7,6 @@ TODO add an add row functionality (button)
 TODO complete the update table button
 TODO (LATER) add functionality to narrow down the table before displaying it
     this should prevent updating so that it is ensured that all fields are filled out
-
 """
 
 
@@ -15,18 +14,33 @@ tab = list()
 numRows = 0
 numCols = 0
 sv = list()
+columnTitles = list()
+
+# Open the connection to NJIT's MySQL server
+njit_SQLServerConnect = {
+    'user': 'ar548',
+    'password': 'ZTL17pPIc',
+    'host': 'sql.njit.edu',
+    'database': 'ar548',
+}
+connection=mysql.connector.connect(**njit_SQLServerConnect)
+
 
 def callRequest():
     global tab
     global numRows
     global numCols
     global sv
+    global columnTitles
+    global connection
     print('requesting table')
 
     query = 'SHOW COLUMNS FROM ' + tableRequested.get() + ';'
 
     table = list()
     tableRow = list()
+
+    cur = connection.cursor()
     q = cur.execute(query)
     r = cur.rowcount
     while True:
@@ -36,6 +50,7 @@ def callRequest():
             break
         for i in row:
             tableRow.append(str(i))
+            columnTitles.append(str(i))
             break
     table.append(tableRow)
     tableRow = list()
@@ -68,6 +83,7 @@ def callRequest():
         tab.append(c)
 
     #sv = [[None]*numCols]*numRows
+    sv = list()
     svr = list()
     for i in range(numRows):
         for j in range(numCols):
@@ -96,9 +112,15 @@ def callUpdate():
     global numRows
     global numCols
     global sv
+    global columnTitles
+    global connection
+
     updatedTable = list()
     updatedTableRow = list()
-    print('update')
+    print('updating')
+
+    cur = connection.cursor()
+
     for i in range(numRows):
         for j in range(numCols):
             print(sv[i][j].get())
@@ -109,15 +131,37 @@ def callUpdate():
     for i in updatedTable:
         print(i)
 
+    stringCols = '('
+    for columnTitle in columnTitles:
+        stringCols += (columnTitle + ',')
+    stringCols = stringCols[:-1]
+    stringCols += ')'
+
+    # TODO get a list of all the values from each row and place them into the VALUES() line
+    query = (
+        'REPLACE INTO' + tableRequested.get() + stringCols + '\n'
+        'VALUES'
+    )
+    for data in updatedTable:
+        if(data == updatedTable[0]):
+            # ignore the first row because its all headers
+            continue
+        else:
+            query += '('
+
+        for datum in data:
+            query += (datum + ',')
+        query = query[:-1]      # remove the last comma
+        query += '),\n'
+    query = query[:-1]
+    query += ';'
+    print(query)
 
 
-njit_SQLServerConnect = {
-    'user': 'ar548',
-    'password': 'ZTL17pPIc',
-    'host': 'sql.njit.edu',
-    'database': 'ar548',
-    # 'table': 'Students'
-}
+    cur.execute(query, multi = True)
+    print('updated')
+
+
 """
 set up an ssh connection to the NJIT servers to hopefully get past the fact that access
 is denied to off campus computers
@@ -125,18 +169,7 @@ is denied to off campus computers
 # TODO below is not working to get around the need for a VPN
 # ssh=paramiko.SSHClient()
 # ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-# ssh.connect('afsconnect1.njit.edu', port=22, username='ar548', password='dragonlance115')
-
-# Open the connection to NJIT's MySQL server
-connection=mysql.connector.connect(**njit_SQLServerConnect)
-cur = connection.cursor()
-
-# query the table
-# query = (
-#     'SELECT FirstName, MiddleInitial, LastName, Gender '
-#     'FROM Students '
-#     'WHERE Gender=\'Male\';'
-# )
+# ssh.connect('afsconnect1.njit.edu', port=22, username='ar548', password='')
 
 root = Tk()
 labelTitle = Label(root, text="MySQL Table Editor")

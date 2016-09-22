@@ -14,6 +14,7 @@ from tkinter import *
 # label3.grid(row = 1,column = 1, columnspan = 1)
 # mainloop()
 
+'''
 root = Tk()
 labelTitle = Label(root, text = "MySQL Table Editor")
 labelTitle.grid(row = 1, column = 0)
@@ -38,9 +39,24 @@ for i in range(numRows):
         tab[i][j].grid(row = i, column = j, padx=5, pady=5)
 
 mainloop()
+'''
 
 
+# this will turn into a parser for the update statement
+q = [1, 2, 3, 'adfa', 'werq', 'asdf', 5]
+slist = list()
+for i in q:
+    slist.append(str(i))
 
+print(slist)
 
-
-
+plist = list()
+for i in slist:
+    n = ''
+    try:
+        n = int(i)
+        plist.append(n)
+        print('int added')
+    except ValueError:
+        plist.append(i)
+print(plist)

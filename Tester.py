@@ -41,7 +41,8 @@ for i in range(numRows):
 mainloop()
 '''
 
-
+'''
+############################################################################################
 # this will turn into a parser for the update statement
 q = [1, 2, 3, 'adfa', 'werq', 'asdf', 5]
 slist = list()
@@ -60,3 +61,29 @@ for i in slist:
     except ValueError:
         plist.append(i)
 print(plist)
+
+
+###########################################################################################
+'''
+
+from tkinter import *
+
+master = Tk()
+
+var = StringVar(master)
+var.set("one") # initial value
+
+option = OptionMenu(master, var, "one", "two", "three", "four")
+option.pack()
+
+#
+# test stuff
+
+def ok():
+    print("value is", var.get())
+    master.quit()
+
+button = Button(master, text="OK", command=ok)
+button.pack()
+
+mainloop()

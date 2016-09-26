@@ -25,7 +25,6 @@ njit_SQLServerConnect = {
 }
 connection=mysql.connector.connect(**njit_SQLServerConnect)
 
-
 def callRequest():
     global tab
     global numRows
@@ -35,12 +34,13 @@ def callRequest():
     global connection
     print('requesting table')
 
+    cur = connection.cursor()
+
     query = 'SHOW COLUMNS FROM ' + tableRequested.get() + ';'
 
     table = list()
     tableRow = list()
 
-    cur = connection.cursor()
     q = cur.execute(query)
     r = cur.rowcount
     while True:
@@ -138,23 +138,36 @@ def callUpdate():
     stringCols += ')'
 
     # TODO get a list of all the values from each row and place them into the VALUES() line
+    #       the above needs to be edited so that the data types are parsed correctly
     query = (
-        'REPLACE INTO' + tableRequested.get() + stringCols + '\n'
+        'REPLACE INTO ' + tableRequested.get() + stringCols + '\n'
         'VALUES'
     )
-    for data in updatedTable:
-        if(data == updatedTable[0]):
-            # ignore the first row because its all headers
-            continue
-        else:
-            query += '('
+    for data in range(1, len(updatedTable)):
+        query += '('
+        n = 0
+        for datum in updatedTable[data]:
+            try:
+                n = int(datum)
+                # any special handling for ints here
+                query += datum
+                print("INT added")
+            except ValueError:
+                try:
+                    n = float(datum)
+                    # any special handling for floats here
+                    query += datum
+                except ValueError:
+                    # it is a string
+                    # any special handling for strings here
+                    query += ('\'' + datum + '\'')
 
-        for datum in data:
-            query += (datum + ',')
+            query += (',')
         query = query[:-1]      # remove the last comma
-        query += '),\n'
-    query = query[:-1]
-    query += ';'
+        query += '),\n'         # and replace it with a parenthesis and a new line character
+    query = query[:-2]          # remove the last new line character
+    query += ';'                # all sql statements end with a semicolon
+    cur.execute(query)
     print(query)
 
 
@@ -171,10 +184,14 @@ is denied to off campus computers
 # ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 # ssh.connect('afsconnect1.njit.edu', port=22, username='ar548', password='')
 
+
+# generate the window
+r = 0
 root = Tk()
 labelTitle = Label(root, text="MySQL Table Editor")
 labelTitle.grid(row=0, column=0)
 
+# the buttons to operate the program
 buttonFrame = Frame(root)
 buttonFrame.grid(row=1, column=0, padx=10, pady=10)
 buttonGet = Button(buttonFrame, text = 'Request Table', command = callRequest )
@@ -182,6 +199,7 @@ buttonGet.grid(row = 0, column = 0)
 buttonUpdate = Button(buttonFrame, text = 'Update Table', command = callUpdate)
 buttonUpdate.grid(row = 0, column = 1)
 
+# entry field for the table name
 tableRequested = StringVar(root)
 tableRequested.set('Students')
 entryFrame = Frame(root)
@@ -191,8 +209,28 @@ labelRequest.grid(row = 0, column = 0)
 entryRequest = Entry(entryFrame, textvariable = tableRequested)
 entryRequest.grid( row = 0, column = 1)
 
+# get the possibilities for the table names that the user can pick
+cur = connection.cursor()
+query = 'SHOW TABLES;'
+q = cur.execute(query)
+tableNames = ''
+while True:
+    row = cur.fetchone()
+    if not row:
+        print("ending SHOW TABLES")
+        break
+    for i in row:
+        tableNames += (i + ', ')
+        print(i)
+tableNames = tableNames[:-1]
+labelTableNames = Label(root, text = 'List of Possible Tables:')
+labelTableNames.grid(row = 3, column = 0)
+labelTableNameslist = Label(root, text = tableNames)
+labelTableNameslist.grid(row = 4, column = 0)
+
+# frame that will hold all the table values
 mainTableFrame = Frame(root)
-mainTableFrame.grid(row=3, column=0, padx=10, pady=10)
+mainTableFrame.grid(row=5, column=0, padx=10, pady=10)
 
 mainloop()
 
